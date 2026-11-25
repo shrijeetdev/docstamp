@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DocStamp: Watermark &amp; Mask Aadhaar/PAN Copies Safely (Free)</title>
+  <meta name="description" content="Free privacy-first browser tool to mask Aadhaar digits, strip EXIF metadata, and add purpose watermarks to ID documents locally on canvas.">
+  <meta name="author" content="Shrijeet Singh">
+  <link rel="canonical" href="https://shrijeetdev.github.io/docstamp/">
+
+  <!-- Open Graph / Social -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="DocStamp: Watermark &amp; Mask Aadhaar/PAN Copies Safely (Free)">
+  <meta property="og:description" content="Mask ID numbers, strip EXIF metadata, and stamp purpose watermarks 100% locally in your browser. Zero uploads.">
+  <meta property="og:url" content="https://shrijeetdev.github.io/docstamp/">
+  <meta property="og:site_name" content="DocStamp">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DocStamp: Watermark &amp; Mask Aadhaar/PAN Copies Safely (Free)">
+  <meta name="twitter:description" content="Mask ID numbers, strip EXIF metadata, and stamp purpose watermarks 100% locally in your browser. Zero uploads.">
+
+  <!-- Inline SVG Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230D1117'/%3E%3Cpath d='M16 4L7 8v7c0 6.1 3.8 11.7 9 13 5.2-1.3 9-6.9 9-13V8l-9-4z' fill='none' stroke='%233FB950' stroke-width='2.5' stroke-linejoin='round'/%3E%3Cpath d='M12 16l3 3 5.5-6' fill='none' stroke='%2315E0ED' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "DocStamp",
+    "url": "https://shrijeetdev.github.io/docstamp/",
+    "description": "Privacy-first browser tool to safely share copies of ID documents by masking sensitive numbers, stripping EXIF/GPS metadata, and adding tiled purpose watermarks locally on HTML5 canvas.",
+    "applicationCategory": "SecurityApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "Shrijeet Singh",
+      "url": "https://github.com/shrijeetdev"
+    }
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #0D1117;
+      --surface: #161B22;
+      --surface-elevated: #1F242C;
+      --border: #30363D;
+      --text: #E6EDF3;
+      --muted: #8B949E;
+      --accent: #3FB950;
+      --accent-hover: #4CC75E;
+      --accent-fg: #0D1117;
+      --accent2: #15E0ED;
+      --danger: #F85149;
+      --danger-bg: rgba(248, 81, 73, 0.12);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #FFFFFF;
+        --surface: #F6F8FA;
+        --surface-elevated: #FFFFFF;
+        --border: #D0D7DE;
+        --text: #1F2328;
+        --muted: #59636E;
+        --accent: #1A7F37;
+        --accent-hover: #15692D;
+        --accent-fg: #FFFFFF;
+        --accent2: #0969DA;
+        --danger: #CF222E;
+        --danger-bg: rgba(207, 34, 46, 0.08);
+        --shadow: 0 4px 16px rgba(31, 35, 40, 0.08);
+      }
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent2);
+      outline-offset: 2px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    /* Header */
+    header {
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      padding: 18px 0;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .brand-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-logo {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .privacy-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(63, 185, 80, 0.14);
+      color: var(--accent);
+      border: 1px solid rgba(63, 185, 80, 0.35);
+    }
+
+    .privacy-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .brand-sub {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .github-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-elevated);
+      color: var(--text);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .github-btn:hover {
+      border-color: var(--muted);
+    }
+
+    /* Main Workspace */
+    main {
+      flex: 1;
+      padding: 24px 0 48px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+
+    /* Canvas Stage */
+    .stage-card {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .stage-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stage-actions-left,
+    .stage-actions-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      min-height: 360px;
+      background-color: var(--bg);
+      background-image:
+        linear-gradient(45deg, var(--surface) 25%, transparent 25%),
+        linear-gradient(-45deg, var(--surface) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, var(--surface) 75%),
+        linear-gradient(-45deg, transparent 75%, var(--surface) 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .canvas-wrapper.has-image {
+      border-style: solid;
+      min-height: 240px;
+      padding: 12px;
+    }
+
+    .canvas-wrapper.drag-over {
+      border-color: var(--accent2);
+      background-color: rgba(21, 224, 237, 0.06);
+    }
+
+    #docCanvas {
+      display: none;
+      max-width: 100%;
+      max-height: 68vh;
+      height: auto;
+      width: auto;
+      border-radius: 4px;
+      box-shadow: var(--shadow);
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .canvas-wrapper.has-image #docCanvas {
+      display: block;
+    }
+
+    .drop-empty {
+      text-align: center;
+      padding: 36px 20px;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .canvas-wrapper.has-image .drop-empty {
+      display: none;
+    }
+
+    .drop-icon {
+      width: 44px;
+      height: 44px;
+      color: var(--accent2);
+    }
+
+    .drop-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .drop-hint {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .drop-cta-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .stage-footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+    }
+
+    /* Buttons & Inputs */
+    button, .btn {
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 13px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-elevated);
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: var(--muted);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .btn-secondary-accent {
+      border-color: rgba(21, 224, 237, 0.45);
+      color: var(--accent2);
+    }
+
+    .btn-secondary-accent:hover:not(:disabled) {
+      border-color: var(--accent2);
+      background: rgba(21, 224, 237, 0.08);
+    }
+
+    .btn-danger {
+      color: var(--danger);
+      border-color: rgba(248, 81, 73, 0.35);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: var(--danger-bg);
+      border-color: var(--danger);
+    }
+
+    .btn-sm {
+      padding: 5px 10px;
+      font-size: 0.8rem;
+    }
+
+    .btn-active {
+      background: rgba(63, 185, 80, 0.16);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Controls Sidebar */
+    .controls-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .section-heading {
+      font-size: 0.92rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    .field-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .val-badge {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .presets-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .preset-chip {
+      font-size: 0.76rem;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="color"] {
+      width: 34px;
+      height: 32px;
+      padding: 2px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      cursor: pointer;
+    }
+
+    .swatch-btn {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 0.84rem;
+      user-select: none;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    /* Segmented toggle */
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .segmented button {
+      border: none;
+      background: transparent;
+      padding: 6px 8px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+    }
+
+    .segmented button[aria-pressed="true"] {
+      background: var(--surface-elevated);
+      color: var(--accent);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Export status box */
+    .export-status {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: rgba(63, 185, 80, 0.1);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+      font-size: 0.82rem;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .export-status.visible {
+      display: flex;
+    }
+
+    .status-badge {
+      color: var(--accent);
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Info & FAQ Section */
+    .info-section {
+      margin-top: 44px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 820px) {
+      .info-section {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .info-section h2 {
+      font-size: 1.15rem;
+      margin: 0 0 14px 0;
+      letter-spacing: -0.01em;
+    }
+
+    .steps-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+
+    .step-num {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-body h3 {
+      margin: 0 0 3px 0;
+      font-size: 0.94rem;
+    }
+
+    .step-body p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    details {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+
+    summary {
+      font-weight: 600;
+      font-size: 0.92rem;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      color: var(--muted);
+      transition: transform 0.15s ease;
+    }
+
+    details[open] summary::after {
+      content: "−";
+      color: var(--accent);
+    }
+
+    details p {
+      margin: 10px 0 0 0;
+      font-size: 0.86rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      padding: 20px 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      text-align: center;
+    }
+
+    footer a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    footer a:hover {
+      color: var(--accent2);
+      text-decoration: underline;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 420px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+      .brand-title {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container header-inner">
+      <div class="brand">
+        <div class="brand-top">
+          <h1 class="brand-title">
+            <svg class="brand-logo" viewBox="0 0 32 32" aria-hidden="true">
+              <rect width="32" height="32" rx="8" fill="#161B22" stroke="#30363D"/>
+              <path d="M16 5L8 8.5v6.5c0 5.5 3.4 10.6 8 11.8 4.6-1.2 8-6.3 8-11.8V8.5L16 5z" fill="none" stroke="#3FB950" stroke-width="2.3" stroke-linejoin="round"/>
+              <path d="M12.5 16l2.5 2.5 5-5.5" fill="none" stroke="#15E0ED" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            DocStamp
+          </h1>
+          <span class="privacy-pill" role="status">
+            <span class="privacy-dot" aria-hidden="true"></span>
+            Runs 100% in your browser
+          </span>
+        </div>
+        <p class="brand-sub">Mask sensitive ID digits, strip EXIF metadata, and stamp purpose watermarks before sharing documents.</p>
+      </div>
+      <a class="github-btn" href="https://github.com/shrijeetdev/docstamp" target="_blank" rel="noopener noreferrer" aria-label="Star DocStamp on GitHub">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        Star on GitHub
+      </a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="workspace">
+      <!-- Left: Canvas Workspace -->
+      <section class="card stage-card" aria-label="Document editor canvas">
+        <div class="stage-toolbar">
+          <div class="stage-actions-left">
+            <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" class="sr-only" aria-label="Choose ID document image">
+            <button type="button" id="uploadBtn" aria-label="Open image file">
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M8 11V2m0 0L4.5 5.5M8 2l3.5 3.5M2 12v1.5A1.5 1.5 0 003.5 15h9a1.5 1.5 0 001.5-1.5V12" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Load Image
+            </button>
+            <button type="button" id="sampleBtn" class="btn-secondary-accent" aria-label="Load a synthetic sample ID card">
+              Try a sample
+            </button>
+          </div>
+          <div class="stage-actions-right">
+            <button type="button" id="aadhaarHelperBtn" class="btn-sm" disabled title="Adds a movable, resizable mask sized for the first 8 digits of an Aadhaar number">
+              + Mask first 8 digits
+            </button>
+            <button type="button" id="undoBtn" class="btn-sm" disabled aria-label="Undo last mask">
+              Undo
+            </button>
+            <button type="button" id="resetMasksBtn" class="btn-sm btn-danger" disabled aria-label="Clear all masks">
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <div id="canvasWrapper" class="canvas-wrapper" role="region" aria-label="Image drop zone and interactive masking canvas" tabindex="0">
+          <div class="drop-empty">
+            <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="16" rx="3"/>
+              <circle cx="8.5" cy="9.5" r="1.5"/>
+              <path d="M21 15l-4.5-4.5L6 20" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p class="drop-title">Drop your ID document here</p>
+            <p class="drop-hint">Supports JPG, PNG, or WebP · Paste directly with <kbd class="mono">Ctrl+V</kbd> / <kbd class="mono">⌘V</kbd> · Zero server uploads</p>
+            <div class="drop-cta-row">
+              <button type="button" id="emptyUploadBtn" class="btn-primary">Select File</button>
+              <button type="button" id="emptySampleBtn">Try a sample</button>
+            </div>
+          </div>
+          <canvas id="docCanvas" aria-label="Document preview with masks and watermark. Drag to draw mask boxes, or drag existing box corners to resize."></canvas>
+        </div>
+
+        <div class="stage-footer-bar">
+          <span id="canvasHint">Tip: Load an image or click "Try a sample" to start masking &amp; watermarking.</span>
+          <span id="imageDims" class="mono" aria-live="polite"></span>
+        </div>
+      </section>
+
+      <!-- Right: Controls -->
+      <aside class="controls-stack" aria-label="Watermark, masking, and export controls">
+        <!-- Purpose Watermark -->
+        <section class="card" aria-labelledby="wmHeading">
+          <h2 id="wmHeading" class="section-heading">1. Purpose Watermark</h2>
+
+          <div class="field">
+            <label>Purpose Presets</label>
+            <div class="presets-grid" id="presetsContainer" role="group" aria-label="Watermark purpose presets">
+              <button type="button" class="preset-chip" data-preset="KYC">KYC</button>
+              <button type="button" class="preset-chip btn-active" data-preset="rental agreement">Rental agreement</button>
+              <button type="button" class="preset-chip" data-preset="job application">Job application</button>
+              <button type="button" class="preset-chip" data-preset="hotel check-in">Hotel check-in</button>
+              <button type="button" class="preset-chip" data-preset="bank account">Bank account</button>
+              <button type="button" class="preset-chip" data-preset="SIM card">SIM card</button>
+              <button type="button" class="preset-chip" data-preset="custom">Custom</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="wmText">Watermark Text</label>
+            <input type="text" id="wmText" autocomplete="off" spellcheck="false" aria-describedby="wmTextHelp">
+            <span id="wmTextHelp" class="sr-only">Edit recipient name, purpose, or date. Updates canvas immediately.</span>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <div class="field-row">
+                <label for="wmOpacity">Opacity</label>
+                <span id="wmOpacityVal" class="val-badge">28%</span>
+              </div>
+              <input type="range" id="wmOpacity" min="5" max="80" value="28">
+            </div>
+
+            <div class="field">
+              <div class="field-row">
+                <label for="wmSize">Font Size</label>
+                <span id="wmSizeVal" class="val-badge">22px</span>
+              </div>
+              <input type="range" id="wmSize" min="12" max="54" value="22">
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <div class="field-row">
+                <label for="wmAngle">Angle</label>
+                <span id="wmAngleVal" class="val-badge">-28°</span>
+              </div>
+              <input type="range" id="wmAngle" min="-65" max="65" value="-28">
+            </div>
+
+            <div class="field">
+              <label for="wmColor">Colour</label>
+              <div class="color-row">
+                <input type="color" id="wmColor" value="#1E40AF" aria-label="Custom watermark color">
+                <button type="button" class="swatch-btn" data-color="#1E40AF" style="background:#1E40AF" aria-label="Navy blue color"></button>
+                <button type="button" class="swatch-btn" data-color="#B91C1C" style="background:#B91C1C" aria-label="Crimson red color"></button>
+                <button type="button" class="swatch-btn" data-color="#111827" style="background:#111827" aria-label="Charcoal black color"></button>
+                <button type="button" class="swatch-btn" data-color="#FFFFFF" style="background:#FFFFFF" aria-label="White color"></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:4px">
+            <label class="checkbox-row">
+              <input type="checkbox" id="footerBandToggle" checked>
+              <span>Add solid purpose footer band</span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Masking Controls -->
+        <section class="card" aria-labelledby="maskHeading">
+          <h2 id="maskHeading" class="section-heading">
+            <span>2. Redaction Masks</span>
+            <span id="maskCountBadge" class="val-badge">0 masks</span>
+          </h2>
+
+          <div class="field">
+            <label>Mask Style</label>
+            <div class="segmented" role="group" aria-label="Masking style">
+              <button type="button" id="styleBlackoutBtn" aria-pressed="true">Solid Black-Out</button>
+              <button type="button" id="stylePixelateBtn" aria-pressed="false">Pixelate</button>
+            </div>
+          </div>
+
+          <p class="drop-hint" style="font-size:0.8rem">
+            Drag anywhere on the document to redact sensitive numbers, QR codes, or signatures. Click a box to move or drag its corner handles to resize.
+          </p>
+        </section>
+
+        <!-- Export Controls -->
+        <section class="card" aria-labelledby="exportHeading">
+          <h2 id="exportHeading" class="section-heading">3. Clean Export</h2>
+
+          <div class="grid-2" style="margin-bottom:12px">
+            <div class="field" style="margin-bottom:0">
+              <label for="exportFormat">Format</label>
+              <select id="exportFormat">
+                <option value="image/jpeg">JPG (Smaller file)</option>
+                <option value="image/png">PNG (Lossless)</option>
+              </select>
+            </div>
+
+            <div class="field" style="margin-bottom:0">
+              <div class="field-row">
+                <label for="exportQuality">JPG Quality</label>
+                <span id="exportQualityVal" class="val-badge">90%</span>
+              </div>
+              <input type="range" id="exportQuality" min="50" max="100" value="90">
+            </div>
+          </div>
+
+          <button type="button" id="downloadBtn" class="btn-primary" style="width:100%;padding:11px 16px;font-size:0.92rem" disabled>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M8 2v9m0 0l-3.5-3.5M8 11l3.5-3.5M2 13.5h12" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Download Protected Copy
+          </button>
+
+          <div id="exportStatus" class="export-status" role="status" aria-live="polite">
+            <span class="status-badge">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                <path d="M3 8.5l3.5 3.5L13 4.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Metadata removed
+            </span>
+            <span id="exportSizeText" class="mono"></span>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <!-- How it Works & FAQ -->
+    <section class="info-section" aria-label="Documentation and Frequently Asked Questions">
+      <div>
+        <h2>How it works</h2>
+        <ol class="steps-list">
+          <li class="step-item">
+            <span class="step-num">1</span>
+            <div class="step-body">
+              <h3>Load locally in memory</h3>
+              <p>Drop, browse, or paste an image of your ID. Your browser decodes it directly into local RAM—no network requests are ever made.</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <span class="step-num">2</span>
+            <div class="step-body">
+              <h3>Redact sensitive digits</h3>
+              <p>Draw black-out or pixelate boxes over your first 8 Aadhaar digits, DOB, or address. Masks are permanently baked into the pixels.</p>
+            </div>
+          </li>
+          <li class="step-item">
+            <span class="step-num">3</span>
+            <div class="step-body">
+              <h3>Stamp purpose &amp; strip EXIF</h3>
+              <p>Tile a dated purpose watermark across the document and export a freshly encoded JPG/PNG with camera, GPS, and device metadata stripped.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div>
+        <h2>Frequently Asked Questions</h2>
+        <div class="faq-list">
+          <details open>
+            <summary>What is a masked Aadhaar and why use it?</summary>
+            <p>A masked Aadhaar hides the first 8 digits of your 12-digit Aadhaar number while leaving only the last 4 digits visible. UIDAI recommends sharing masked copies for routine verification (hotels, SIM cards, rentals) so your full ID number cannot be misused.</p>
+          </details>
+          <details>
+            <summary>Why add a purpose watermark to ID copies?</summary>
+            <p>Writing who the copy is for and the exact date across the document prevents a leaked or intercepted copy from being reused to open fraudulent accounts, take loans, or register SIM cards elsewhere.</p>
+          </details>
+          <details>
+            <summary>Is anything uploaded to a server?</summary>
+            <p>No. DocStamp is a single static HTML file with zero backend, zero analytics, and zero external requests. All rendering, masking, and re-encoding happen strictly inside your browser's HTML5 Canvas.</p>
+          </details>
+          <details>
+            <summary>Which image formats are supported?</summary>
+            <p>You can import JPG, PNG, and WebP images via drag-and-drop, file picker, or clipboard paste. Exports are freshly re-encoded as clean JPG or PNG files without any embedded EXIF/GPS tags.</p>
+          </details>
+          <details>
+            <summary>Is DocStamp free and open source?</summary>
+            <p>Yes, DocStamp is 100% free with no watermarks of its own, no sign-ups, and full source code available on GitHub for anyone to inspect, audit, or self-host.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <span>Built by <a href="https://github.com/shrijeetdev" target="_blank" rel="noopener noreferrer">Shrijeet Singh</a></span>
+      <span aria-hidden="true">·</span>
+      <a href="https://github.com/shrijeetdev/docstamp" target="_blank" rel="noopener noreferrer">Star on GitHub</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://shrijeetdev.github.io/" target="_blank" rel="noopener noreferrer">More free tools</a>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      'use strict';
+
+      // Format today's date in en-IN (e.g., "25 Nov 2026")
+      function getFormattedDateIN() {
+        try {
+          return new Intl.DateTimeFormat('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          }).format(new Date());
+        } catch (e) {
+          const d = new Date();
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          return `${String(d.getDate()).padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
+        }
+      }
+
+      const todayStr = getFormattedDateIN();
+
+      // Application State
+      const state = {
+        img: null,
+        imgWidth: 0,
+        imgHeight: 0,
+        isSample: false,
+        preset: 'rental agreement',
+        wmText: `Only for rental agreement with ____ on ${todayStr}`,
+        wmOpacity: 0.28,
+        wmSize: 22,
+        wmAngle: -28,
+        wmColor: '#1E40AF',
+        footerBand: true,
+        maskStyle: 'blackout', // 'blackout' | 'pixelate'
+        masks: [], // Array of { id, x, y, w, h, style }
+        selectedMaskId: null,
+        exportFormat: 'image/jpeg',
+        exportQuality: 0.90
+      };
+
+      // Interaction state for dragging/creating/resizing masks
+      const pointer = {
+        mode: null, // 'draw' | 'move' | 'resize'
+        handle: null, // 'nw' | 'ne' | 'sw' | 'se'
+        startX: 0,
+        startY: 0,
+        origBox: null,
+        activeId: null
+      };
+
+      // DOM References
+      const els = {
+        fileInput: document.getElementById('fileInput'),
+        uploadBtn: document.getElementById('uploadBtn'),
+        emptyUploadBtn: document.getElementById('emptyUploadBtn'),
+        sampleBtn: document.getElementById('sampleBtn'),
+        emptySampleBtn: document.getElementById('emptySampleBtn'),
+        aadhaarHelperBtn: document.getElementById('aadhaarHelperBtn'),
+        undoBtn: document.getElementById('undoBtn'),
+        resetMasksBtn: document.getElementById('resetMasksBtn'),
+        canvasWrapper: document.getElementById('canvasWrapper'),
+        canvas: document.getElementById('docCanvas'),
+        canvasHint: document.getElementById('canvasHint'),
+        imageDims: document.getElementById('imageDims'),
+        presetsContainer: document.getElementById('presetsContainer'),
+        wmText: document.getElementById('wmText'),
+        wmOpacity: document.getElementById('wmOpacity'),
+        wmOpacityVal: document.getElementById('wmOpacityVal'),
+        wmSize: document.getElementById('wmSize'),
+        wmSizeVal: document.getElementById('wmSizeVal'),
+        wmAngle: document.getElementById('wmAngle'),
+        wmAngleVal: document.getElementById('wmAngleVal'),
+        wmColor: document.getElementById('wmColor'),
+        footerBandToggle: document.getElementById('footerBandToggle'),
+        maskCountBadge: document.getElementById('maskCountBadge'),
+        styleBlackoutBtn: document.getElementById('styleBlackoutBtn'),
+        stylePixelateBtn: document.getElementById('stylePixelateBtn'),
+        exportFormat: document.getElementById('exportFormat'),
+        exportQuality: document.getElementById('exportQuality'),
+        exportQualityVal: document.getElementById('exportQualityVal'),
+        downloadBtn: document.getElementById('downloadBtn'),
+        exportStatus: document.getElementById('exportStatus'),
+        exportSizeText: document.getElementById('exportSizeText')
+      };
+
+      const ctx = els.canvas.getContext('2d', { willReadFrequently: true });
+
+      // Initialize default input values
+      els.wmText.value = state.wmText;
+
+      // Utility: Generate unique ID
+      function uid() {
+        return Math.random().toString(36).slice(2, 9);
+      }
+
+      // Utility: Format bytes cleanly
+      function formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+      }
+
+      // Load an Image object into workspace
+      function setDocumentImage(imgElement, isSample = false) {
+        state.img = imgElement;
+        state.imgWidth = imgElement.naturalWidth || imgElement.width;
+        state.imgHeight = imgElement.naturalHeight || imgElement.height;
+        state.isSample = isSample;
+        state.masks = [];
+        state.selectedMaskId = null;
+
+        // Scale default font size sensibly relative to image width
+        const suggestedSize = Math.max(14, Math.min(48, Math.round(state.imgWidth / 42)));
+        state.wmSize = suggestedSize;
+        els.wmSize.value = suggestedSize;
+        els.wmSizeVal.textContent = `${suggestedSize}px`;
+
+        els.canvasWrapper.classList.add('has-image');
+        els.aadhaarHelperBtn.disabled = false;
+        els.downloadBtn.disabled = false;
+        els.exportStatus.classList.remove('visible');
+        els.imageDims.textContent = `${state.imgWidth} × ${state.imgHeight} px`;
+        els.canvasHint.textContent = 'Drag across sensitive details to redact. Click a mask box to move or resize.';
+
+        updateToolbarButtons();
+        render(true);
+      }
+
+      // Load File (from input, drop, or clipboard)
+      function handleImageFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => setDocumentImage(img, false);
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      // Draw a synthetic SAMPLE Indian ID card on an offscreen canvas
+      function loadSampleDocument() {
+        const w = 1000;
+        const h = 630;
+        const off = document.createElement('canvas');
+        off.width = w;
+        off.height = h;
+        const c = off.getContext('2d');
+
+        // Card background
+        c.fillStyle = '#F8FAFC';
+        c.fillRect(0, 0, w, h);
+
+        // Subtle guilloche security lines
+        c.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+        c.lineWidth = 1.5;
+        for (let i = -h; i < w + h; i += 24) {
+          c.beginPath();
+          c.moveTo(i, 0);
+          c.lineTo(i + h * 0.6, h);
+          c.stroke();
+        }
+
+        // Top tri-color style header bar (generic civic palette)
+        c.fillStyle = '#EA580C';
+        c.fillRect(0, 0, w, 22);
+        c.fillStyle = '#FFFFFF';
+        c.fillRect(0, 22, w, 16);
+        c.fillStyle = '#15803D';
+        c.fillRect(0, 38, w, 22);
+
+        // Header Authority Text
+        c.fillStyle = '#0F172A';
+        c.font = 'bold 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        c.fillText('SAMPLE IDENTITY AUTHORITY · SPECIMEN CARD', 42, 102);
+
+        c.fillStyle = '#DC2626';
+        c.font = 'bold 16px monospace';
+        c.fillText('NOT A REAL GOVERNMENT ID — FOR TESTING ONLY', 42, 128);
+
+        // Divider
+        c.strokeStyle = '#CBD5E1';
+        c.lineWidth = 2;
+        c.beginPath();
+        c.moveTo(42, 146);
+        c.lineTo(w - 42, 146);
+        c.stroke();
+
+        // Portrait Box
+        c.fillStyle = '#E2E8F0';
+        c.fillRect(48, 174, 190, 230);
+        c.strokeStyle = '#94A3B8';
+        c.lineWidth = 2;
+        c.strokeRect(48, 174, 190, 230);
+
+        // Vector Silhouette inside portrait
+        c.fillStyle = '#64748B';
+        c.beginPath();
+        c.arc(143, 250, 42, 0, Math.PI * 2);
+        c.fill();
+        c.beginPath();
+        c.arc(143, 375, 72, Math.PI, 0);
+        c.fill();
+
+        // Personal Details
+        c.fillStyle = '#475569';
+        c.font = '600 17px sans-serif';
+        c.fillText('Name / नाम', 272, 200);
+        c.fillStyle = '#0F172A';
+        c.font = 'bold 26px sans-serif';
+        c.fillText('Aarav Kumar Sharma (SAMPLE)', 272, 230);
+
+        c.fillStyle = '#475569';
+        c.font = '600 17px sans-serif';
+        c.fillText('DOB / जन्म तिथि: 14/08/1994', 272, 276);
+        c.fillText('Gender / पुरुष: MALE', 272, 312);
+
+        c.fillStyle = '#475569';
+        c.font = '600 16px sans-serif';
+        c.fillText('Address: Flat 402, Sample Residency, Sector 45, Gurugram', 272, 356);
+        c.fillText('Haryana - 122003', 272, 380);
+
+        // Decorative Mock QR Code on right
+        const qrX = 775;
+        const qrY = 178;
+        const qrSize = 175;
+        c.fillStyle = '#FFFFFF';
+        c.fillRect(qrX, qrY, qrSize, qrSize);
+        c.strokeStyle = '#94A3B8';
+        c.strokeRect(qrX, qrY, qrSize, qrSize);
+        c.fillStyle = '#1E293B';
+        const cell = 11;
+        for (let r = 1; r < 14; r++) {
+          for (let col = 1; col < 14; col++) {
+            if ((r * 7 + col * 13) % 3 === 0 || (r < 4 && col < 4) || (r < 4 && col > 10) || (r > 10 && col < 4)) {
+              c.fillRect(qrX + col * cell + 5, qrY + r * cell + 5, cell - 2, cell - 2);
+            }
+          }
+        }
+
+        // Bottom ID Number Strip
+        c.strokeStyle = '#CBD5E1';
+        c.beginPath();
+        c.moveTo(42, 445);
+        c.lineTo(w - 42, 445);
+        c.stroke();
+
+        c.fillStyle = '#64748B';
+        c.font = '600 16px sans-serif';
+        c.textAlign = 'center';
+        c.fillText('SAMPLE UNIQUE IDENTIFICATION NUMBER', w / 2, 482);
+
+        // Large 12-digit Sample Number (specifically positioned for easy Aadhaar helper demo)
+        c.fillStyle = '#0F172A';
+        c.font = 'bold 48px "SF Mono", Menlo, Consolas, monospace';
+        c.fillText('2345 6789 0123', w / 2, 538);
+
+        // Diagonal faint SPECIMEN stamp baked into base sample
+        c.save();
+        c.translate(w / 2, h / 2);
+        c.rotate(-0.25);
+        c.strokeStyle = 'rgba(220, 38, 38, 0.25)';
+        c.lineWidth = 4;
+        c.strokeRect(-150, -34, 300, 68);
+        c.fillStyle = 'rgba(220, 38, 38, 0.28)';
+        c.font = 'bold 36px sans-serif';
+        c.fillText('SAMPLE SPECIMEN', 0, 12);
+        c.restore();
+
+        // Bottom Red Border
+        c.fillStyle = '#DC2626';
+        c.fillRect(0, h - 14, w, 14);
+        c.textAlign = 'left';
+
+        const img = new Image();
+        img.onload = () => setDocumentImage(img, true);
+        img.src = off.toDataURL('image/png');
+      }
+
+      // Compute footer band height in pixels if enabled
+      function getFooterBandHeight() {
+        if (!state.footerBand || !state.img) return 0;
+        return Math.max(40, Math.round(state.wmSize * 2.1));
+      }
+
+      // Apply pixelation effect to a rectangular region on ctx
+      function applyPixelateMask(x, y, w, h) {
+        const rx = Math.max(0, Math.round(x));
+        const ry = Math.max(0, Math.round(y));
+        const rw = Math.min(state.imgWidth - rx, Math.round(w));
+        const rh = Math.min(state.imgHeight - ry, Math.round(h));
+        if (rw <= 2 || rh <= 2) return;
+
+        const blockSize = Math.max(8, Math.round(Math.min(rw, rh) / 5));
+        const imgData = ctx.getImageData(rx, ry, rw, rh);
+        const data = imgData.data;
+
+        for (let by = 0; by < rh; by += blockSize) {
+          for (let bx = 0; bx < rw; bx += blockSize) {
+            let r = 0, g = 0, b = 0, count = 0;
+            const maxY = Math.min(by + blockSize, rh);
+            const maxX = Math.min(bx + blockSize, rw);
+
+            for (let py = by; py < maxY; py++) {
+              for (let px = bx; px < maxX; px++) {
+                const idx = (py * rw + px) * 4;
+                r += data[idx];
+                g += data[idx + 1];
+                b += data[idx + 2];
+                count++;
+              }
+            }
+
+            r = Math.round(r / count);
+            g = Math.round(g / count);
+            b = Math.round(b / count);
+
+            for (let py = by; py < maxY; py++) {
+              for (let px = bx; px < maxX; px++) {
+                const idx = (py * rw + px) * 4;
+                data[idx] = r;
+                data[idx + 1] = g;
+                data[idx + 2] = b;
+              }
+            }
+          }
+        }
+        ctx.putImageData(imgData, rx, ry);
+      }
+
+      // Core Render Pipeline
+      // showSelectionUI = false when exporting flattened clean file
+      function render(showSelectionUI = true) {
+        if (!state.img) return;
+
+        const bandH = getFooterBandHeight();
+        const totalW = state.imgWidth;
+        const totalH = state.imgHeight + bandH;
+
+        els.canvas.width = totalW;
+        els.canvas.height = totalH;
+
+        // 1. Draw base document image
+        ctx.clearRect(0, 0, totalW, totalH);
+        ctx.drawImage(state.img, 0, 0, totalW, state.imgHeight);
+
+        // 2. Flatten redaction masks directly into pixels
+        for (const mask of state.masks) {
+          const nx = mask.w < 0 ? mask.x + mask.w : mask.x;
+          const ny = mask.h < 0 ? mask.y + mask.h : mask.y;
+          const nw = Math.abs(mask.w);
+          const nh = Math.abs(mask.h);
+
+          if (mask.style === 'pixelate') {
+            applyPixelateMask(nx, ny, nw, nh);
+          } else {
+            ctx.fillStyle = '#090D12';
+            ctx.fillRect(nx, ny, nw, nh);
+          }
+        }
+
+        // 3. Draw Tiled Diagonal Purpose Watermark over the document area
+        const text = state.wmText.trim();
+        if (text.length > 0) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(0, 0, totalW, state.imgHeight);
+          ctx.clip();
+
+          ctx.globalAlpha = state.wmOpacity;
+          ctx.fillStyle = state.wmColor;
+          ctx.font = `700 ${state.wmSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+          ctx.textBaseline = 'middle';
+
+          const metrics = ctx.measureText(text);
+          const textW = Math.max(metrics.width, 80);
+          const stepX = textW + state.wmSize * 2.4;
+          const stepY = state.wmSize * 4.2;
+
+          const diag = Math.hypot(totalW, state.imgHeight);
+          ctx.translate(totalW / 2, state.imgHeight / 2);
+          ctx.rotate((state.wmAngle * Math.PI) / 180);
+
+          let row = 0;
+          for (let y = -diag; y <= diag; y += stepY) {
+            const offset = (row % 2) * (stepX * 0.5);
+            for (let x = -diag - offset; x <= diag; x += stepX) {
+              ctx.fillText(text, x, y);
+            }
+            row++;
+          }
+          ctx.restore();
+        }
+
+        // 4. Optional Solid Purpose Footer Band
+        if (bandH > 0) {
+          ctx.save();
+          ctx.fillStyle = '#0D1117';
+          ctx.fillRect(0, state.imgHeight, totalW, bandH);
+
+          // Top accent border on footer band
+          ctx.fillStyle = '#3FB950';
+          ctx.fillRect(0, state.imgHeight, totalW, Math.max(3, Math.round(bandH * 0.06)));
+
+          const bandText = text || `Protected copy · ${todayStr}`;
+          ctx.fillStyle = '#F8FAFC';
+          let bandFontSize = Math.round(state.wmSize * 0.85);
+          ctx.font = `600 ${bandFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+
+          // Shrink text if wider than canvas
+          const maxBandTextW = totalW - 32;
+          const measured = ctx.measureText(bandText).width;
+          if (measured > maxBandTextW && measured > 0) {
+            bandFontSize = Math.max(11, Math.floor(bandFontSize * (maxBandTextW / measured)));
+            ctx.font = `600 ${bandFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+          }
+
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(bandText, totalW / 2, state.imgHeight + bandH / 2 + 1);
+          ctx.restore();
+        }
+
+        // 5. Interactive Selection Outline & Handles (never included in exported file)
+        if (showSelectionUI && state.selectedMaskId) {
+          const sel = state.masks.find((m) => m.id === state.selectedMaskId);
+          if (sel) {
+            const nx = sel.w < 0 ? sel.x + sel.w : sel.x;
+            const ny = sel.h < 0 ? sel.y + sel.h : sel.y;
+            const nw = Math.abs(sel.w);
+            const nh = Math.abs(sel.h);
+
+            ctx.save();
+            ctx.strokeStyle = '#15E0ED';
+            ctx.lineWidth = Math.max(2, Math.round(totalW / 350));
+            ctx.setLineDash([6, 4]);
+            ctx.strokeRect(nx, ny, nw, nh);
+            ctx.setLineDash([]);
+
+            const hs = Math.max(10, Math.round(totalW / 75));
+            const corners = [
+              [nx, ny],
+              [nx + nw, ny],
+              [nx, ny + nh],
+              [nx + nw, ny + nh]
+            ];
+            ctx.fillStyle = '#15E0ED';
+            ctx.strokeStyle = '#0D1117';
+            ctx.lineWidth = 1.5;
+            for (const [cx, cy] of corners) {
+              ctx.fillRect(cx - hs / 2, cy - hs / 2, hs, hs);
+              ctx.strokeRect(cx - hs / 2, cy - hs / 2, hs, hs);
+            }
+            ctx.restore();
+          }
+        }
+      }
+
+      // Update toolbar button states & mask count
+      function updateToolbarButtons() {
+        const count = state.masks.length;
+        els.undoBtn.disabled = count === 0;
+        els.resetMasksBtn.disabled = count === 0;
+        els.maskCountBadge.textContent = `${count} ${count === 1 ? 'mask' : 'masks'}`;
+      }
+
+      // Add Aadhaar First-8-Digits Helper Mask
+      function addAadhaarMask() {
+        if (!state.img) return;
+        let boxW, boxH, boxX, boxY;
+
+        if (state.isSample) {
+          // Sized directly over "2345 6789 " on the sample card while keeping "0123" visible
+          boxW = Math.round(state.imgWidth * 0.285);
+          boxH = Math.round(state.imgHeight * 0.088);
+          boxX = Math.round(state.imgWidth * 0.288);
+          boxY = Math.round(state.imgHeight * 0.788);
+        } else {
+          // General Aadhaar-proportioned mask covering ~2/3 of a 12-digit block, placed center-bottom
+          boxW = Math.round(state.imgWidth * 0.28);
+          boxH = Math.round(state.imgHeight * 0.08);
+          boxX = Math.round((state.imgWidth - boxW) * 0.38);
+          boxY = Math.round(state.imgHeight * 0.76);
+        }
+
+        const newMask = {
+          id: uid(),
+          x: boxX,
+          y: boxY,
+          w: boxW,
+          h: boxH,
+          style: state.maskStyle
+        };
+        state.masks.push(newMask);
+        state.selectedMaskId = newMask.id;
+        updateToolbarButtons();
+        els.exportStatus.classList.remove('visible');
+        render(true);
+      }
+
+      // Convert client pointer coordinates to canvas pixel coordinates
+      function getCanvasCoords(clientX, clientY) {
+        const rect = els.canvas.getBoundingClientRect();
+        const scaleX = els.canvas.width / rect.width;
+        const scaleY = els.canvas.height / rect.height;
+        const x = Math.max(0, Math.min(state.imgWidth, (clientX - rect.left) * scaleX));
+        const y = Math.max(0, Math.min(state.imgHeight, (clientY - rect.top) * scaleY));
+        return { x, y };
+      }
+
+      // Hit-test existing masks and resize handles
+      function hitTest(px, py) {
+        const hs = Math.max(16, Math.round(els.canvas.width / 45));
+
+        // First check selected mask handles
+        if (state.selectedMaskId) {
+          const sel = state.masks.find((m) => m.id === state.selectedMaskId);
+          if (sel) {
+            const handles = {
+              nw: [sel.x, sel.y],
+              ne: [sel.x + sel.w, sel.y],
+              sw: [sel.x, sel.y + sel.h],
+              se: [sel.x + sel.w, sel.y + sel.h]
+            };
+            for (const [key, [hx, hy]] of Object.entries(handles)) {
+              if (Math.abs(px - hx) <= hs && Math.abs(py - hy) <= hs) {
+                return { type: 'resize', handle: key, mask: sel };
+              }
+            }
+          }
+        }
+
+        // Next check mask bodies from top-most to bottom-most
+        for (let i = state.masks.length - 1; i >= 0; i--) {
+          const m = state.masks[i];
+          if (px >= m.x && px <= m.x + m.w && py >= m.y && py <= m.y + m.h) {
+            return { type: 'move', mask: m };
+          }
+        }
+        return null;
+      }
+
+      // Pointer Down on Canvas
+      function onPointerDown(e) {
+        if (!state.img) return;
+        e.preventDefault();
+        els.canvas.setPointerCapture(e.pointerId);
+        const { x, y } = getCanvasCoords(e.clientX, e.clientY);
+        const hit = hitTest(x, y);
+
+        if (hit) {
+          state.selectedMaskId = hit.mask.id;
+          pointer.mode = hit.type;
+          pointer.handle = hit.handle || null;
+          pointer.startX = x;
+          pointer.startY = y;
+          pointer.activeId = hit.mask.id;
+          pointer.origBox = { ...hit.mask };
+        } else {
+          const newMask = {
+            id: uid(),
+            x,
+            y,
+            w: 1,
+            h: 1,
+            style: state.maskStyle
+          };
+          state.masks.push(newMask);
+          state.selectedMaskId = newMask.id;
+          pointer.mode = 'draw';
+          pointer.startX = x;
+          pointer.startY = y;
+          pointer.activeId = newMask.id;
+        }
+        els.exportStatus.classList.remove('visible');
+        render(true);
+      }
+
+      // Pointer Move on Canvas
+      function onPointerMove(e) {
+        if (!state.img) return;
+        const { x, y } = getCanvasCoords(e.clientX, e.clientY);
+
+        if (!pointer.mode) {
+          const hit = hitTest(x, y);
+          if (hit && hit.type === 'resize') {
+            els.canvas.style.cursor = (hit.handle === 'nw' || hit.handle === 'se') ? 'nwse-resize' : 'nesw-resize';
+          } else if (hit && hit.type === 'move') {
+            els.canvas.style.cursor = 'move';
+          } else {
+            els.canvas.style.cursor = 'crosshair';
+          }
+          return;
+        }
+
+        const mask = state.masks.find((m) => m.id === pointer.activeId);
+        if (!mask) return;
+
+        if (pointer.mode === 'draw') {
+          mask.x = Math.min(pointer.startX, x);
+          mask.y = Math.min(pointer.startY, y);
+          mask.w = Math.abs(x - pointer.startX);
+          mask.h = Math.abs(y - pointer.startY);
+        } else if (pointer.mode === 'move') {
+          const dx = x - pointer.startX;
+          const dy = y - pointer.startY;
+          mask.x = Math.max(0, Math.min(state.imgWidth - pointer.origBox.w, pointer.origBox.x + dx));
+          mask.y = Math.max(0, Math.min(state.imgHeight - pointer.origBox.h, pointer.origBox.y + dy));
+        } else if (pointer.mode === 'resize') {
+          const orig = pointer.origBox;
+          let left = orig.x;
+          let top = orig.y;
+          let right = orig.x + orig.w;
+          let bottom = orig.y + orig.h;
+
+          if (pointer.handle.includes('w')) left = Math.min(x, right - 10);
+          if (pointer.handle.includes('e')) right = Math.max(x, left + 10);
+          if (pointer.handle.includes('n')) top = Math.min(y, bottom - 10);
+          if (pointer.handle.includes('s')) bottom = Math.max(y, top + 10);
+
+          mask.x = Math.max(0, left);
+          mask.y = Math.max(0, top);
+          mask.w = Math.min(state.imgWidth - mask.x, right - mask.x);
+          mask.h = Math.min(state.imgHeight - mask.y, bottom - mask.y);
+        }
+
+        render(true);
+      }
+
+      // Pointer Up on Canvas
+      function onPointerUp(e) {
+        if (!pointer.mode) return;
+        if (els.canvas.hasPointerCapture(e.pointerId)) {
+          els.canvas.releasePointerCapture(e.pointerId);
+        }
+
+        if (pointer.mode === 'draw') {
+          const mask = state.masks.find((m) => m.id === pointer.activeId);
+          // Discard accidental tiny taps (< 6px)
+          if (mask && (mask.w < 6 || mask.h < 6)) {
+            state.masks = state.masks.filter((m) => m.id !== mask.id);
+            state.selectedMaskId = state.masks.length ? state.masks[state.masks.length - 1].id : null;
+          }
+        }
+
+        pointer.mode = null;
+        pointer.handle = null;
+        pointer.activeId = null;
+        pointer.origBox = null;
+        updateToolbarButtons();
+        render(true);
+      }
+
+      // Export Flattened Clean Image (strips all EXIF/GPS metadata via canvas re-encoding)
+      function exportCleanImage() {
+        if (!state.img) return;
+
+        // Render without interactive selection handles
+        render(false);
+
+        const mime = state.exportFormat;
+        const quality = mime === 'image/jpeg' ? state.exportQuality : undefined;
+        const ext = mime === 'image/png' ? 'png' : 'jpg';
+
+        els.canvas.toBlob((blob) => {
+          // Restore selection UI on screen immediately
+          render(true);
+          if (!blob) return;
+
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const safeSlug = state.preset.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          a.href = url;
+          a.download = `docstamp-${safeSlug}-${Date.now()}.${ext}`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1500);
+
+          els.exportSizeText.textContent = `${ext.toUpperCase()} · ${formatBytes(blob.size)}`;
+          els.exportStatus.classList.add('visible');
+        }, mime, quality);
+      }
+
+      // Event Listeners: File Loading & Drag/Drop/Paste
+      els.uploadBtn.addEventListener('click', () => els.fileInput.click());
+      els.emptyUploadBtn.addEventListener('click', () => els.fileInput.click());
+      els.fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          handleImageFile(e.target.files[0]);
+          e.target.value = '';
+        }
+      });
+
+      els.sampleBtn.addEventListener('click', loadSampleDocument);
+      els.emptySampleBtn.addEventListener('click', loadSampleDocument);
+
+      els.canvasWrapper.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        els.canvasWrapper.classList.add('drag-over');
+      });
+      els.canvasWrapper.addEventListener('dragleave', () => {
+        els.canvasWrapper.classList.remove('drag-over');
+      });
+      els.canvasWrapper.addEventListener('drop', (e) => {
+        e.preventDefault();
+        els.canvasWrapper.classList.remove('drag-over');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleImageFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      // Paste image from clipboard anywhere on page
+      window.addEventListener('paste', (e) => {
+        const items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        for (const item of items) {
+          if (item.type.startsWith('image/')) {
+            const file = item.getAsFile();
+            if (file) {
+              handleImageFile(file);
+              break;
+            }
+          }
+        }
+      });
+
+      // Keyboard shortcuts (Delete/Backspace removes selected mask; Ctrl/Cmd+Z undoes)
+      window.addEventListener('keydown', (e) => {
+        const tag = document.activeElement && document.activeElement.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+        if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedMaskId) {
+          e.preventDefault();
+          state.masks = state.masks.filter((m) => m.id !== state.selectedMaskId);
+          state.selectedMaskId = state.masks.length ? state.masks[state.masks.length - 1].id : null;
+          updateToolbarButtons();
+          render(true);
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && state.masks.length > 0) {
+          e.preventDefault();
+          state.masks.pop();
+          state.selectedMaskId = state.masks.length ? state.masks[state.masks.length - 1].id : null;
+          updateToolbarButtons();
+          render(true);
+        }
+      });
+
+      // Canvas Pointer Events
+      els.canvas.addEventListener('pointerdown', onPointerDown);
+      els.canvas.addEventListener('pointermove', onPointerMove);
+      els.canvas.addEventListener('pointerup', onPointerUp);
+      els.canvas.addEventListener('pointercancel', onPointerUp);
+
+      // Mask Toolbar Buttons
+      els.aadhaarHelperBtn.addEventListener('click', addAadhaarMask);
+
+      els.undoBtn.addEventListener('click', () => {
+        if (state.masks.length === 0) return;
+        state.masks.pop();
+        state.selectedMaskId = state.masks.length ? state.masks[state.masks.length - 1].id : null;
+        updateToolbarButtons();
+        els.exportStatus.classList.remove('visible');
+        render(true);
+      });
+
+      els.resetMasksBtn.addEventListener('click', () => {
+        state.masks = [];
+        state.selectedMaskId = null;
+        updateToolbarButtons();
+        els.exportStatus.classList.remove('visible');
+        render(true);
+      });
+
+      // Watermark Presets
+      els.presetsContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-preset]');
+        if (!btn) return;
+        const preset = btn.dataset.preset;
+        state.preset = preset;
+
+        els.presetsContainer.querySelectorAll('.preset-chip').forEach((chip) => {
+          chip.classList.toggle('btn-active', chip === btn);
+        });
+
+        if (preset === 'custom') {
+          els.wmText.focus();
+          els.wmText.select();
+        } else {
+          state.wmText = `Only for ${preset} with ____ on ${todayStr}`;
+          els.wmText.value = state.wmText;
+        }
+        render(true);
+      });
+
+      // Watermark Controls
+      els.wmText.addEventListener('input', (e) => {
+        state.wmText = e.target.value;
+        render(true);
+      });
+
+      els.wmOpacity.addEventListener('input', (e) => {
+        const val = Number(e.target.value);
+        state.wmOpacity = val / 100;
+        els.wmOpacityVal.textContent = `${val}%`;
+        render(true);
+      });
+
+      els.wmSize.addEventListener('input', (e) => {
+        const val = Number(e.target.value);
+        state.wmSize = val;
+        els.wmSizeVal.textContent = `${val}px`;
+        render(true);
+      });
+
+      els.wmAngle.addEventListener('input', (e) => {
+        const val = Number(e.target.value);
+        state.wmAngle = val;
+        els.wmAngleVal.textContent = `${val}°`;
+        render(true);
+      });
+
+      els.wmColor.addEventListener('input', (e) => {
+        state.wmColor = e.target.value;
+        render(true);
+      });
+
+      document.querySelectorAll('.swatch-btn').forEach((swatch) => {
+        swatch.addEventListener('click', () => {
+          const hex = swatch.dataset.color;
+          state.wmColor = hex;
+          els.wmColor.value = hex;
+          render(true);
+        });
+      });
+
+      els.footerBandToggle.addEventListener('change', (e) => {
+        state.footerBand = e.target.checked;
+        render(true);
+      });
+
+      // Mask Style Toggle (applies to new masks and updates currently selected mask)
+      function setMaskStyle(style) {
+        state.maskStyle = style;
+        els.styleBlackoutBtn.setAttribute('aria-pressed', String(style === 'blackout'));
+        els.stylePixelateBtn.setAttribute('aria-pressed', String(style === 'pixelate'));
+
+        if (state.selectedMaskId) {
+          const sel = state.masks.find((m) => m.id === state.selectedMaskId);
+          if (sel) {
+            sel.style = style;
+            render(true);
+          }
+        }
+      }
+
+      els.styleBlackoutBtn.addEventListener('click', () => setMaskStyle('blackout'));
+      els.stylePixelateBtn.addEventListener('click', () => setMaskStyle('pixelate'));
+
+      // Export Settings & Action
+      els.exportFormat.addEventListener('change', (e) => {
+        state.exportFormat = e.target.value;
+        els.exportQuality.disabled = state.exportFormat === 'image/png';
+      });
+
+      els.exportQuality.addEventListener('input', (e) => {
+        const val = Number(e.target.value);
+        state.exportQuality = val / 100;
+        els.exportQualityVal.textContent = `${val}%`;
+      });
+
+      els.downloadBtn.addEventListener('click', exportCleanImage);
+    })();
+  </script>
+</body>
+</html>
